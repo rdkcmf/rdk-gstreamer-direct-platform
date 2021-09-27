@@ -82,8 +82,10 @@ namespace rdk_gstreamer_utils {
         const char* AudioUnderflowSignal = getAudioUnderflowSignalName_soc();
         const char* VideoUnderflowSignal = getVideoUnderflowSignalName_soc();
 
-        return g_signal_connect(audiodecoder, AudioUnderflowSignal, underflowAudioCallback, data) > 0 ||
-            g_signal_connect(videodecoder, VideoUnderflowSignal, underflowVideoCallback, data) > 0;
+        gulong id_audio = g_signal_connect(audiodecoder, AudioUnderflowSignal, underflowAudioCallback, data);
+        gulong id_video = g_signal_connect(videodecoder, VideoUnderflowSignal, underflowVideoCallback, data);
+
+	return id_audio > 0 && id_video > 0;
     }
 
     bool isSocAudioFadeSupported()
