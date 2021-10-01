@@ -55,5 +55,19 @@ namespace rdk_gstreamer_utils
         return;
     }
 
+    bool isPtsOffsetAdjustmentSupported_soc()
+    {
+        return true;
+    }
+
+    int getPtsOffsetAdjustment_soc(const std::string& audioCodecString)
+    {
+        unsigned int HEAAC_FRAME_SIZE_IN_MS = 42;
+        bool isAudioAAC = (audioCodecString.compare(std::string("mp4a"))==0);
+        int ptsoffset = (isAudioAAC) ? (2*HEAAC_FRAME_SIZE_IN_MS*45) : 0;
+
+        return ptsoffset;
+    }
+
 } // namespace rdk_gstreamer_utils_soc.cpp
 

@@ -55,4 +55,14 @@ namespace rdk_gstreamer_utils
         // no op
         return;
     }
+
+    bool isPtsOffsetAdjustmentSupported_soc()
+    {
+        return false;
+    }
+
+    int getPtsOffsetAdjustment_soc(const std::string& audioCodecString)
+    {
+        return 0;
+    }
 } // namespace rdk_gstreamer_utils

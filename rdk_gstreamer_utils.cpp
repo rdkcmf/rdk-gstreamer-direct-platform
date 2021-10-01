@@ -97,4 +97,19 @@ namespace rdk_gstreamer_utils {
     {
         EaseAudio_soc(target, duration, ease);
     }
+    
+    bool isPtsOffsetAdjustmentSupported()
+    {
+        return isPtsOffsetAdjustmentSupported_soc();
+    }
+    
+    int getPtsOffsetAdjustment(const std::string& audioCodecString)
+    {
+        if (isPtsOffsetAdjustmentSupported_soc()) {
+            return getPtsOffsetAdjustment_soc(audioCodecString);
+        } else {
+            return 0;
+        }
+    }
+
 } // namespace rdk_gstreamer_utils

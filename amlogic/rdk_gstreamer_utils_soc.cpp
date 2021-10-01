@@ -78,4 +78,14 @@ namespace rdk_gstreamer_utils
         else
             LOG_RGU("Failed to acquire Audio Fade H/w.... !");
     }
+
+    bool isPtsOffsetAdjustmentSupported_soc()
+    {
+        return false;
+    }
+
+    int getPtsOffsetAdjustment_soc(const std::string& audioCodecString)
+    {
+        return 0;
+    }
 } //namespace rdk_gstreamer_utils_soc.cpp

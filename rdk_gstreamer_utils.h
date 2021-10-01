@@ -23,6 +23,7 @@
 #include <glib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string>
 
 namespace rdk_gstreamer_utils {
 
@@ -46,5 +47,8 @@ namespace rdk_gstreamer_utils {
 
     bool isSocAudioFadeSupported();
     void doAudioEasingonSoc(double target, uint32_t duration, rgu_Ease ease);
+
+    bool isPtsOffsetAdjustmentSupported();
+    int getPtsOffsetAdjustment(const std::string& audioCodecString);
 } // namespace rdk_gstreamer_utils
 #endif /* __RDK_GSTREAMER_UTILS_H___ */

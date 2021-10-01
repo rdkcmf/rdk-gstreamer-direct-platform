@@ -17,6 +17,7 @@
 * limitations under the License.
 */
 
+#include <string>
 
 namespace rdk_gstreamer_utils
 {
@@ -26,4 +27,6 @@ namespace rdk_gstreamer_utils
     const char* getVideoUnderflowSignalName_soc();
     bool IsAudioFadeSupported_soc();
     void EaseAudio_soc(double target, uint32_t duration, rgu_Ease ease);
+    bool isPtsOffsetAdjustmentSupported_soc();
+    int getPtsOffsetAdjustment_soc(const std::string& audioCodecString);
 } //namespace rdk_gstreamer_utils
