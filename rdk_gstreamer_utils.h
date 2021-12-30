@@ -150,5 +150,8 @@ namespace rdk_gstreamer_utils {
     size_t audioMixerGetBufferDelay(int64_t queuedBytes,int bufferDelayms);
     uint64_t audioMixerGetFifoSize();
     void switchToAudioMasterMode();
+
+    void setKeyFrameFlag(GstBuffer *gstBuffer,bool val);
+    bool getDelayTimerEnabled();
 } // namespace rdk_gstreamer_utils
 #endif /* __RDK_GSTREAMER_UTILS_H___ */

@@ -191,4 +191,16 @@ namespace rdk_gstreamer_utils {
     {
         return switchToAudioMasterMode_soc();
     }
+    
+    void setKeyFrameFlag(GstBuffer *gstBuffer,bool val)
+    {
+        setKeyFrameFlag_soc(gstBuffer,val);
+    }
+
+    bool getDelayTimerEnabled()
+    {
+        return getDelayTimerEnabled_soc();
+    }
+
+
 } // namespace rdk_gstreamer_utils

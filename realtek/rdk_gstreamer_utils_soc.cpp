@@ -183,6 +183,17 @@ namespace rdk_gstreamer_utils
     {
         return (GST_FIFO_SIZE_MS * 48 * 4);
     }
+  
+    void setKeyFrameFlag_soc(GstBuffer *gstBuffer,bool val)
+    {
+        //nop
+	return;
+    }
+
+    bool getDelayTimerEnabled_soc()
+    {
+        return true;
+    }
 
     void switchToAudioMasterMode_soc()
     {

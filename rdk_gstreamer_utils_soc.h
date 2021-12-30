@@ -46,4 +46,6 @@ namespace rdk_gstreamer_utils
     size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms);
     uint64_t audioMixerGetFifoSize_soc();
     void switchToAudioMasterMode_soc();
+    void setKeyFrameFlag_soc(GstBuffer *gstBuffer,bool val);
+    bool getDelayTimerEnabled_soc();
 } //namespace rdk_gstreamer_utils

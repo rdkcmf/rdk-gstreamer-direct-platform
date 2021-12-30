@@ -20,6 +20,7 @@
 #include <stdlib.h>
 
 #include "../rdk_gstreamer_utils.h"
+#define GST_BUFFER_FLAG_NF_KEYFRAME (GST_BUFFER_FLAG_LAST << 1)
 namespace rdk_gstreamer_utils
 {
     #define HEAAC_FRAME_SIZE 42
@@ -213,5 +214,24 @@ namespace rdk_gstreamer_utils
     {
         putenv("GST_BRCM_STC_MODE=audio");
     }
+    
+    void setKeyFrameFlag_soc(GstBuffer *gstBuffer,bool val)
+    {
+	if( val) {
+	    GST_BUFFER_FLAG_SET(gstBuffer, GST_BUFFER_FLAG_NF_KEYFRAME);
+	}else {
+	    GST_BUFFER_FLAG_UNSET(gstBuffer, GST_BUFFER_FLAG_NF_KEYFRAME);
+	}
+    }
+
+    bool getDelayTimerEnabled_soc()
+    {
+        //return false;
+	/*Actual retval is false for brcm platform (BCOM-5932(Xi6)), but changes not yet working for Kaon,
+	Hence for now let the API return true itself.*/
+	return true;
+    }
+
+
 } // namespace rdk_gstreamer_utils_soc.cpp
 

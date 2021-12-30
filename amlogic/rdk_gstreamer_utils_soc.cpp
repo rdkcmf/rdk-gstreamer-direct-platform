@@ -766,4 +766,17 @@ namespace rdk_gstreamer_utils
         // no op. To be implemented if required later
         return;
     }
+
+    void setKeyFrameFlag_soc(GstBuffer *gstBuffer,bool val)
+    {
+        //nop
+	return;
+    }
+
+    bool getDelayTimerEnabled_soc()
+    {
+        return true;
+    }
+
+
 } //namespace rdk_gstreamer_utils_soc.cpp
