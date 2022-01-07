@@ -97,6 +97,75 @@ namespace rdk_gstreamer_utils {
     {
         EaseAudio_soc(target, duration, ease);
     }
+
+
+    void setVideoProperty(GstElement *pipeline)
+    {
+        setVideoProperty_soc(pipeline);
+    }
+
+    void processAudioGap(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration)
+    {
+        processAudioGap_soc(pipeline,gapstartpts,gapduration);
+    }
+
+    void enableAudioSwitch(GstElement *pipeline)
+    {
+        enableAudioSwitch_soc(pipeline);
+    }
+
+    GstElement * configureUIAudioSink(bool TTSenabled)
+    {
+        return configureUIAudioSink_soc(TTSenabled);
+    }
+
+    GstElement * getAudioSinkPlaysinkBin(GstElement *element)
+    {
+       return getAudioSinkPlaysinkBin_soc(element);
+    }
+
+    rgu_gstelement getAudioElement(GstElement *element)
+    {
+        gchar* elementName = gst_element_get_name(element);
+        rgu_gstelement audelement = GSTELEMENTNULL;
+        if (elementName) {
+            if (g_strrstr(elementName, "parse")) {
+                audelement = GSTAUDIOPARSER;
+            }
+            else if (g_strrstr(elementName, "dec")) {
+                audelement = GSTAUDIODECODER;
+            }
+            g_free(elementName);
+        }
+        return audelement;
+    }
+
+    bool foundAudioDecodeBin(GstElement * typeFindParent)
+    {
+        bool found=false;
+        gchar* elementName = gst_element_get_name(typeFindParent);
+        if (elementName && g_strrstr(elementName, "decodebin"))
+        {
+           found=true;
+        }
+        g_free(elementName);
+        return found;
+    }
+
+    bool isUIAudioVGAudioMixSupported()
+    {
+        return isUIAudioVGAudioMixSupported_soc();
+    }
+
+    std::map<rgu_gstelement,GstElement *> createNewAudioElements(bool isAudioAAC,bool createqueue)
+    {
+        return createNewAudioElements_soc(isAudioAAC,createqueue);
+    }
+
+    unsigned getNativeAudioFlag()
+    {
+        return getNativeAudioFlag_soc();
+    }
     
     bool isPtsOffsetAdjustmentSupported()
     {
