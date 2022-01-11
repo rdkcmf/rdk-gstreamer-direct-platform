@@ -54,7 +54,55 @@ namespace rdk_gstreamer_utils
         // no op
         return;
     }
+    void setVideoProperty_soc(GstElement *pipeline)
+    {
+        // no op. To be implemented if required later
+        return;
+    }
 
+    void processAudioGap_soc(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration)
+    {
+        // no op. To be implemented if required later
+        return;
+    }
+
+    void enableAudioSwitch_soc(GstElement *pipeline)
+    {
+        // no op. To be implemented if required later
+        return;
+    }
+
+    GstElement * configureUIAudioSink_soc(bool TTSenabled)
+    {
+        GstElement *audioSink = NULL;
+        LOG_RGU("configureUIAudioSink_soc: : connecting autoaudiosink");
+        audioSink = gst_element_factory_make ("autoaudiosink","autoaudiosink");
+        
+        return audioSink;        
+    }
+
+    GstElement * getAudioSinkPlaysinkBin_soc(GstElement *element)
+    {
+        // no op. To be implemented if required later
+        return NULL;
+    }
+
+    bool isUIAudioVGAudioMixSupported_soc()
+    {
+        return true;
+    }
+
+    std::map<rgu_gstelement,GstElement *> createNewAudioElements_soc(bool isAudioAAC,bool createqueue)
+    {
+        // no op. To be implemented if required later
+        std::map<rgu_gstelement,GstElement *> newAudElements;
+        return newAudElements;
+    }
+
+    unsigned getNativeAudioFlag_soc()
+    {
+        return getGstPlayFlag("native-audio"); 
+    }
     bool isPtsOffsetAdjustmentSupported_soc()
     {
         return true;

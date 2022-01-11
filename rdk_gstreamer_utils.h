@@ -23,6 +23,8 @@
 #include <glib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
+#include <map>
 #include <string>
 
 namespace rdk_gstreamer_utils {
@@ -37,6 +39,24 @@ namespace rdk_gstreamer_utils {
         EaseOutCubic,
         EaseCount
     };
+    enum rgu_gstelement
+    {
+        GSTELEMENTNULL= 0,
+        GSTAUDIODECODER,
+        GSTAUDIOPARSER,
+        GSTAUDIOQUEUE 
+    };
+
+    inline unsigned getGstPlayFlag(const char* nick)
+    {
+        static GFlagsClass* flagsClass = static_cast<GFlagsClass*>(g_type_class_ref(g_type_from_name("GstPlayFlags")));
+
+        GFlagsValue* flag = g_flags_get_value_by_nick(flagsClass, nick);
+        if (!flag)
+            return 0;
+
+        return flag->value;
+    }
 
     bool installUnderflowCallbackFromPlatform(GstElement *pipeline,
         GCallback underflowVideoCallback,
@@ -50,5 +70,15 @@ namespace rdk_gstreamer_utils {
 
     bool isPtsOffsetAdjustmentSupported();
     int getPtsOffsetAdjustment(const std::string& audioCodecString);
+    void setVideoProperty(GstElement *pipeline);
+    void processAudioGap(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration);
+    void enableAudioSwitch(GstElement *pipeline);
+    GstElement * configureUIAudioSink(bool TTSenabled);
+    GstElement * getAudioSinkPlaysinkBin(GstElement *element);
+    rgu_gstelement getAudioElement(GstElement *element);
+    bool foundAudioDecodeBin(GstElement * typeFindParent);
+    bool isUIAudioVGAudioMixSupported();
+    std::map<rgu_gstelement,GstElement *> createNewAudioElements(bool isAudioAAC,bool createqueue);
+    unsigned getNativeAudioFlag();
 } // namespace rdk_gstreamer_utils
 #endif /* __RDK_GSTREAMER_UTILS_H___ */

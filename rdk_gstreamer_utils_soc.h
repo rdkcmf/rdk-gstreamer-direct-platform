@@ -29,4 +29,12 @@ namespace rdk_gstreamer_utils
     void EaseAudio_soc(double target, uint32_t duration, rgu_Ease ease);
     bool isPtsOffsetAdjustmentSupported_soc();
     int getPtsOffsetAdjustment_soc(const std::string& audioCodecString);
+    void setVideoProperty_soc(GstElement *pipeline);
+    void processAudioGap_soc(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration);
+    void enableAudioSwitch_soc(GstElement *pipeline);
+    GstElement * configureUIAudioSink_soc(bool TTSenabled);
+    GstElement * getAudioSinkPlaysinkBin_soc(GstElement *element);
+    bool isUIAudioVGAudioMixSupported_soc();
+    std::map<rgu_gstelement,GstElement *> createNewAudioElements_soc(bool isAudioAAC,bool createqueue);
+    unsigned int getNativeAudioFlag_soc();
 } //namespace rdk_gstreamer_utils
