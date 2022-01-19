@@ -104,9 +104,9 @@ namespace rdk_gstreamer_utils {
         setVideoProperty_soc(pipeline);
     }
 
-    void processAudioGap(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration)
+    void processAudioGap(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration,gint64 gapdiscontinuity,bool audioaac)
     {
-        processAudioGap_soc(pipeline,gapstartpts,gapduration);
+        processAudioGap_soc(pipeline,gapstartpts,gapduration,gapdiscontinuity,audioaac);
     }
 
     void enableAudioSwitch(GstElement *pipeline)
@@ -119,47 +119,9 @@ namespace rdk_gstreamer_utils {
         return configureUIAudioSink_soc(TTSenabled);
     }
 
-    GstElement * getAudioSinkPlaysinkBin(GstElement *element)
-    {
-       return getAudioSinkPlaysinkBin_soc(element);
-    }
-
-    rgu_gstelement getAudioElement(GstElement *element)
-    {
-        gchar* elementName = gst_element_get_name(element);
-        rgu_gstelement audelement = GSTELEMENTNULL;
-        if (elementName) {
-            if (g_strrstr(elementName, "parse")) {
-                audelement = GSTAUDIOPARSER;
-            }
-            else if (g_strrstr(elementName, "dec")) {
-                audelement = GSTAUDIODECODER;
-            }
-            g_free(elementName);
-        }
-        return audelement;
-    }
-
-    bool foundAudioDecodeBin(GstElement * typeFindParent)
-    {
-        bool found=false;
-        gchar* elementName = gst_element_get_name(typeFindParent);
-        if (elementName && g_strrstr(elementName, "decodebin"))
-        {
-           found=true;
-        }
-        g_free(elementName);
-        return found;
-    }
-
     bool isUIAudioVGAudioMixSupported()
     {
         return isUIAudioVGAudioMixSupported_soc();
-    }
-
-    std::map<rgu_gstelement,GstElement *> createNewAudioElements(bool isAudioAAC,bool createqueue)
-    {
-        return createNewAudioElements_soc(isAudioAAC,createqueue);
     }
 
     unsigned getNativeAudioFlag()
@@ -179,6 +141,60 @@ namespace rdk_gstreamer_utils {
         } else {
             return 0;
         }
+    }
+    
+    void configAudioCap(AudioAttributes *pAttrib, bool *audioaac, bool svpenabled, GstCaps **appsrcCaps)
+    {
+        gchar *caps_string;
+        LOG_RGU("Config audio codec %s sampling rate %d channel %d alignment %d",
+                pAttrib->mCodecParam.c_str(),
+                pAttrib->mSamplesPerSecond,
+                pAttrib->mNumberOfChannels,
+                pAttrib->mBlockAlignment);
+
+        if (pAttrib->mCodecParam.compare(0, 4, std::string("mp4a")) == 0)
+        {
+            LOG_RGU("####### Using AAC\n");
+            caps_string = g_strdup_printf("audio/mpeg, mpegversion=4, enable-svp=(string)%s", svpenabled ? "true" : "false");
+            *audioaac = true;
+        }
+        else
+        {
+            LOG_RGU("####### Using EAC3 \n");
+
+            caps_string = g_strdup_printf("audio/x-eac3, framed=(boolean)true, rate=(int)%u, channels=(int)%u, alignment=(string)frame, enable-svp=(string)%s",
+                                          pAttrib->mSamplesPerSecond,
+                                          pAttrib->mNumberOfChannels,
+                                          svpenabled ? "true" : "false");
+            *audioaac = false;
+        }
+        *appsrcCaps = gst_caps_from_string(caps_string);
+        g_free(caps_string);
+    }
+
+
+    bool performAudioTrackCodecChannelSwitch(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup,const void *pSampleAttr, AudioAttributes *pAudioAttr, uint32_t *pStatus, unsigned int *pui32Delay,
+                                                 llong *pAudioChangeTargetPts,const llong *pcurrentDispPts, unsigned int *audio_change_stage, GstCaps **appsrcCaps,
+                                                 bool *audioaac, bool svpenabled, GstElement *aSrc, bool *ret)
+    {
+        return performAudioTrackCodecChannelSwitch_soc(pgstUtilsPlaybackGroup, pSampleAttr,pAudioAttr,pStatus, pui32Delay,
+                                                pAudioChangeTargetPts,pcurrentDispPts,audio_change_stage,appsrcCaps,
+                                                audioaac,svpenabled, aSrc,ret);
+    }
+
+    void setAppSrcParams(GstElement *aSrc,MediaType mediatype)
+    {
+        return setAppSrcParams_soc(aSrc,mediatype);
+    }
+    
+    void setPixelAspectRatio(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY)
+    {
+        return setPixelAspectRatio_soc(ppCaps,appsrcCaps,pixelAspectRatioX,pixelAspectRatioY);
+    }
+
+    void deepElementAdded(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, GstBin* pipeline, GstBin* bin, GstElement* element)
+    {
+	    deepElementAdded_soc(pgstUtilsPlaybackGroup,pipeline, bin,element);
     }
 
 } // namespace rdk_gstreamer_utils

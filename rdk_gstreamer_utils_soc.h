@@ -30,11 +30,16 @@ namespace rdk_gstreamer_utils
     bool isPtsOffsetAdjustmentSupported_soc();
     int getPtsOffsetAdjustment_soc(const std::string& audioCodecString);
     void setVideoProperty_soc(GstElement *pipeline);
-    void processAudioGap_soc(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration);
+    void processAudioGap_soc(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration,gint64 gapdiscontinuity,bool audioaac);
     void enableAudioSwitch_soc(GstElement *pipeline);
     GstElement * configureUIAudioSink_soc(bool TTSenabled);
-    GstElement * getAudioSinkPlaysinkBin_soc(GstElement *element);
     bool isUIAudioVGAudioMixSupported_soc();
-    std::map<rgu_gstelement,GstElement *> createNewAudioElements_soc(bool isAudioAAC,bool createqueue);
     unsigned int getNativeAudioFlag_soc();
+    
+    bool performAudioTrackCodecChannelSwitch_soc(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, const void *pSampleAttr, AudioAttributes *pAudioAttr, uint32_t *pStatus, unsigned int *pui32Delay,
+                                                 llong *pAudioChangeTargetPts, const llong *pcurrentDispPts, unsigned int *audio_change_stage, GstCaps **appsrcCaps,
+                                                 bool *audioaac, bool svpenabled, GstElement *aSrc, bool *ret);
+    void setAppSrcParams_soc(GstElement *aSrc,MediaType mediatype);
+    void setPixelAspectRatio_soc(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY);
+    void deepElementAdded_soc (struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, GstBin* pipeline, GstBin* bin, GstElement* element);
 } //namespace rdk_gstreamer_utils
