@@ -31,6 +31,7 @@ namespace rdk_gstreamer_utils {
 
     #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
     #define LOG_RGU(fmt, ...) do { fprintf(stderr, "[RGU:%s:%d]: " fmt "\n", __FILENAME__, __LINE__, ##__VA_ARGS__); fflush(stderr); } while (0)
+    typedef long long llong;
 
     enum rgu_Ease
     {
@@ -45,6 +46,67 @@ namespace rdk_gstreamer_utils {
         GSTAUDIODECODER,
         GSTAUDIOPARSER,
         GSTAUDIOQUEUE 
+    };
+
+    enum MediaType
+    {
+        MEDIA_UNKNOWN = -1,
+        MEDIA_AUDIO = 0,
+        MEDIA_VIDEO = 1
+    };    
+    struct rdkGstreamerUtilsPlaybackGrp{
+        GstElement *gstPipeline;
+        GstElement *curAudioPlaysinkBin;
+        GstElement *curAudioDecodeBin;
+        GstElement *curAudioDecoder;
+        GstElement *curAudioParse;
+        GstElement *curAudioTypefind;
+        bool     linkTypefindParser;
+        bool isAudioAAC;
+    };
+    struct AudioAttributes {
+    AudioAttributes()
+        : mNumberOfChannels(0), mSamplesPerSecond(0), mBitrate(0), mBlockAlignment(0), mCodecSpecificData(nullptr), mCodecSpecificDataLen(0)
+    {}
+    /**
+     * "Codecs Parameter" string as in
+     * http://tools.ietf.org/search/draft-gellens-mime-bucket-bis-09 as the
+     * string is defined in the context of an ISO file. The string will be in
+     * the form of a simp-list production defined in
+     * http://tools.ietf.org/search/draft-gellens-mime-bucket-bis-09, without
+     * the enclosing DQUOTE characters.
+     *
+     * For example, HE-AAC would be expressed as
+     *
+     *     mp4a.40.2, mp4a.40.5
+     *
+     * since the HE profile contains both AAC-LC and SBR. Dolby Digital Plus
+     * would be expressed as:
+     *
+     *      ec-3.A2 or ec-3.A6
+     */
+    std::string mCodecParam;
+
+    /** Number of channels */
+    uint32_t mNumberOfChannels;
+
+    /** Sampling frequency */
+    uint32_t mSamplesPerSecond;
+
+    /** Bit rate */
+    uint32_t mBitrate;
+
+    /** Block Align */
+    uint32_t mBlockAlignment;
+
+    /**
+     * Byte array of configuration data for the video encoding.  The format of
+     * the data is codec-specific. For HE-AAC, the data mCodecSpecificData is
+     * the AudioSpecificConfig data as defined in 14496-3-2009 Sec. 1.6.2.1.
+     * The length of the codec specific data is given by mCodecSpecificDataLen;
+     */
+    const uint8_t *mCodecSpecificData;
+    uint32_t mCodecSpecificDataLen;
     };
 
     inline unsigned getGstPlayFlag(const char* nick)
@@ -71,14 +133,18 @@ namespace rdk_gstreamer_utils {
     bool isPtsOffsetAdjustmentSupported();
     int getPtsOffsetAdjustment(const std::string& audioCodecString);
     void setVideoProperty(GstElement *pipeline);
-    void processAudioGap(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration);
+    void processAudioGap(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration,gint64 gapdiscontinuity,bool audioaac);
     void enableAudioSwitch(GstElement *pipeline);
     GstElement * configureUIAudioSink(bool TTSenabled);
-    GstElement * getAudioSinkPlaysinkBin(GstElement *element);
-    rgu_gstelement getAudioElement(GstElement *element);
-    bool foundAudioDecodeBin(GstElement * typeFindParent);
     bool isUIAudioVGAudioMixSupported();
     std::map<rgu_gstelement,GstElement *> createNewAudioElements(bool isAudioAAC,bool createqueue);
     unsigned getNativeAudioFlag();
+    void configAudioCap(AudioAttributes *pAttrib, bool *audioaac, bool svpenabled, GstCaps **appsrcCaps);
+    bool performAudioTrackCodecChannelSwitch(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, const void *pSampleAttr, AudioAttributes *pAudioAttr, uint32_t *pStatus, unsigned int *pui32Delay,
+                                                 llong *pAudioChangeTargetPts, const llong *pcurrentDispPts, unsigned int *audio_change_stage, GstCaps **appsrcCaps,
+                                                 bool *audioaac, bool svpenabled, GstElement *aSrc, bool *ret);
+    void setAppSrcParams(GstElement *aSrc,MediaType mediatype);
+    void setPixelAspectRatio(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY);
+    void deepElementAdded(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, GstBin* pipeline, GstBin* bin, GstElement* element);
 } // namespace rdk_gstreamer_utils
 #endif /* __RDK_GSTREAMER_UTILS_H___ */

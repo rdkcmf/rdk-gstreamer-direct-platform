@@ -20,6 +20,9 @@
 #include "../rdk_gstreamer_utils.h"
 namespace rdk_gstreamer_utils
 {
+    #define HEAAC_FRAME_SIZE 42
+    #define DDP_FRAME_SIZE 32
+
     const char* getAudioDecoderName_soc()
     {
         const char* bcm_audiodecoder_name  = PLATFORM_AUDIODECODER;
@@ -60,10 +63,35 @@ namespace rdk_gstreamer_utils
         return;
     }
 
-    void processAudioGap_soc(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration)
+    void processAudioGap_soc(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration,gint64 gapdiscontinuity,bool audioaac)
     {
-        // no op. To be implemented if required later
-        return;
+        uint32_t ptsFadeDurationInMs;
+       
+        if(true == audioaac) {
+            ptsFadeDurationInMs = HEAAC_FRAME_SIZE;
+        } else {
+            ptsFadeDurationInMs = DDP_FRAME_SIZE;
+        }
+        GstElement *audioSink = NULL;
+        
+        if(gapduration) {
+            
+            g_object_get(pipeline, "audio-sink", &audioSink, NULL);
+            if(audioSink) {
+                g_object_set(audioSink, "ms12ptsfade-level", 0, NULL);
+                g_object_set(audioSink, "ms12ptsfade-duration", ptsFadeDurationInMs, NULL);
+                g_object_set(audioSink, "ms12ptsfade-pts", gapstartpts, NULL);
+            }
+        }
+        if(gapdiscontinuity) {
+            
+            g_object_get(pipeline, "audio-sink", &audioSink, NULL);
+            if(audioSink) {
+            g_object_set(audioSink, "ms12ptsfade-level",1, NULL);
+            g_object_set(audioSink, "ms12ptsfade-duration", ptsFadeDurationInMs, NULL);
+            g_object_set(audioSink, "ms12ptsfade-pts", gapstartpts, NULL);
+            }
+        }
     }
 
     void enableAudioSwitch_soc(GstElement *pipeline)
@@ -81,28 +109,16 @@ namespace rdk_gstreamer_utils
         return audioSink;        
     }
 
-    GstElement * getAudioSinkPlaysinkBin_soc(GstElement *element)
-    {
-        // no op. To be implemented if required later
-        return NULL;
-    }
-
     bool isUIAudioVGAudioMixSupported_soc()
     {
         return true;
-    }
-
-    std::map<rgu_gstelement,GstElement *> createNewAudioElements_soc(bool isAudioAAC,bool createqueue)
-    {
-        // no op. To be implemented if required later
-        std::map<rgu_gstelement,GstElement *> newAudElements;
-        return newAudElements;
     }
 
     unsigned getNativeAudioFlag_soc()
     {
         return getGstPlayFlag("native-audio"); 
     }
+
     bool isPtsOffsetAdjustmentSupported_soc()
     {
         return true;
@@ -117,5 +133,58 @@ namespace rdk_gstreamer_utils
         return ptsoffset;
     }
 
+    void configAudioCap_soc(AudioAttributes *pAttrib, bool *audioaac, bool svpenabled, GstCaps **appsrcCaps)
+    {
+        gchar *caps_string;
+        LOG_RGU("Config audio codec %s sampling rate %d channel %d alignment %d",
+                pAttrib->mCodecParam.c_str(),
+                pAttrib->mSamplesPerSecond,
+                pAttrib->mNumberOfChannels,
+                pAttrib->mBlockAlignment);
+
+        if (pAttrib->mCodecParam.compare(0, 4, std::string("mp4a")) == 0)
+        {
+            LOG_RGU("####### Using AAC\n");
+            caps_string = g_strdup_printf("audio/mpeg, mpegversion=4, enable-svp=(string)%s", svpenabled ? "true" : "false");
+            *audioaac = true;
+        }
+        else
+        {
+            LOG_RGU("####### Using EAC3 \n");
+
+            caps_string = g_strdup_printf("audio/x-eac3, framed=(boolean)true, rate=(int)%u, channels=(int)%u, alignment=(string)frame, enable-svp=(string)%s",
+                                          pAttrib->mSamplesPerSecond,
+                                          pAttrib->mNumberOfChannels,
+                                          svpenabled ? "true" : "false");
+            *audioaac = false;
+        }
+        *appsrcCaps = gst_caps_from_string(caps_string);
+        g_free(caps_string);
+    }
+
+    bool performAudioTrackCodecChannelSwitch_soc(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, const void *pSampleAttr, AudioAttributes *pAudioAttr, uint32_t *pStatus, unsigned int *pui32Delay,
+                                                 llong *pAudioChangeTargetPts, const llong *pcurrentDispPts, unsigned int *audio_change_stage, GstCaps **appsrcCaps,
+                                                 bool *audioaac, bool svpenabled, GstElement *aSrc, bool *ret)
+    {
+        return false;
+    }       
+
+    void setAppSrcParams_soc(GstElement *aSrc,MediaType mediatype)
+    {
+        if (mediatype == MEDIA_VIDEO) 
+            g_object_set(aSrc, "max-bytes", (guint64) 512 * 1024, NULL);
+        else 
+            g_object_set(aSrc, "max-bytes", (guint64) 1 * 64 * 1024, NULL);
+    }    
+
+    void setPixelAspectRatio_soc(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY)                                 
+    {
+        return;
+    }
+
+    void deepElementAdded_soc (struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup,GstBin* pipeline, GstBin* bin, GstElement* element)
+    {
+        return;
+    }
 } // namespace rdk_gstreamer_utils_soc.cpp
 
