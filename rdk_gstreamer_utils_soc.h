@@ -45,4 +45,5 @@ namespace rdk_gstreamer_utils
     void audioMixerGetDeviceInfo_soc(uint32_t& preferredFrames, uint32_t& maximumFrames);
     size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms);
     uint64_t audioMixerGetFifoSize_soc();
+    void switchToAudioMasterMode_soc();
 } //namespace rdk_gstreamer_utils

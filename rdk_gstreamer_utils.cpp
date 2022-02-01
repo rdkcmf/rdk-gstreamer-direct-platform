@@ -186,4 +186,9 @@ namespace rdk_gstreamer_utils {
     {
         return audioMixerGetFifoSize_soc();
     }
+
+    void switchToAudioMasterMode()
+    {
+        return switchToAudioMasterMode_soc();
+    }
 } // namespace rdk_gstreamer_utils

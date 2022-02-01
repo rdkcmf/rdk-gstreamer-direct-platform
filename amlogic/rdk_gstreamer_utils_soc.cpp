@@ -760,4 +760,10 @@ namespace rdk_gstreamer_utils
     {
         return (GST_FIFO_SIZE_MS * 48 * 4);
     }
+
+    void switchToAudioMasterMode_soc()
+    {
+        // no op. To be implemented if required later
+        return;
+    }
 } //namespace rdk_gstreamer_utils_soc.cpp

@@ -17,6 +17,8 @@
 * limitations under the License.
 */
 
+#include <stdlib.h>
+
 #include "../rdk_gstreamer_utils.h"
 namespace rdk_gstreamer_utils
 {
@@ -205,6 +207,11 @@ namespace rdk_gstreamer_utils
     uint64_t audioMixerGetFifoSize_soc()
     {
         return (GST_FIFO_SIZE_MS * 48 * 4);
+    }
+
+    void switchToAudioMasterMode_soc()
+    {
+        putenv("GST_BRCM_STC_MODE=audio");
     }
 } // namespace rdk_gstreamer_utils_soc.cpp
 
