@@ -147,5 +147,8 @@ namespace rdk_gstreamer_utils {
     void setAppSrcParams(GstElement *aSrc,MediaType mediatype);
     void setPixelAspectRatio(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY);
     void deepElementAdded(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, GstBin* pipeline, GstBin* bin, GstElement* element);
+    void audioMixerGetDeviceInfo(uint32_t& preferredFrames, uint32_t& maximumFrames);    
+    size_t audioMixerGetBufferDelay(int64_t queuedBytes,int bufferDelayms); 
+    uint64_t audioMixerGetFifoSize();
 } // namespace rdk_gstreamer_utils
 #endif /* __RDK_GSTREAMER_UTILS_H___ */

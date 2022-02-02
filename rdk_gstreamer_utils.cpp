@@ -145,31 +145,7 @@ namespace rdk_gstreamer_utils {
     
     void configAudioCap(AudioAttributes *pAttrib, bool *audioaac, bool svpenabled, GstCaps **appsrcCaps)
     {
-        gchar *caps_string;
-        LOG_RGU("Config audio codec %s sampling rate %d channel %d alignment %d",
-                pAttrib->mCodecParam.c_str(),
-                pAttrib->mSamplesPerSecond,
-                pAttrib->mNumberOfChannels,
-                pAttrib->mBlockAlignment);
-
-        if (pAttrib->mCodecParam.compare(0, 4, std::string("mp4a")) == 0)
-        {
-            LOG_RGU("####### Using AAC\n");
-            caps_string = g_strdup_printf("audio/mpeg, mpegversion=4, enable-svp=(string)%s", svpenabled ? "true" : "false");
-            *audioaac = true;
-        }
-        else
-        {
-            LOG_RGU("####### Using EAC3 \n");
-
-            caps_string = g_strdup_printf("audio/x-eac3, framed=(boolean)true, rate=(int)%u, channels=(int)%u, alignment=(string)frame, enable-svp=(string)%s",
-                                          pAttrib->mSamplesPerSecond,
-                                          pAttrib->mNumberOfChannels,
-                                          svpenabled ? "true" : "false");
-            *audioaac = false;
-        }
-        *appsrcCaps = gst_caps_from_string(caps_string);
-        g_free(caps_string);
+        configAudioCap_soc(pAttrib,audioaac,svpenabled,appsrcCaps);
     }
 
 
@@ -195,6 +171,21 @@ namespace rdk_gstreamer_utils {
     void deepElementAdded(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, GstBin* pipeline, GstBin* bin, GstElement* element)
     {
 	    deepElementAdded_soc(pgstUtilsPlaybackGroup,pipeline, bin,element);
+    }
+
+    void audioMixerGetDeviceInfo(uint32_t& preferredFrames, uint32_t& maximumFrames)
+    {
+        return  audioMixerGetDeviceInfo_soc(preferredFrames, maximumFrames);
+    }
+
+    size_t audioMixerGetBufferDelay(int64_t queuedBytes,int bufferDelayms)
+    {
+        return audioMixerGetBufferDelay_soc(queuedBytes,bufferDelayms);
+    }
+
+    uint64_t audioMixerGetFifoSize()
+    {
+        return audioMixerGetFifoSize_soc();
     }
 
 } // namespace rdk_gstreamer_utils

@@ -36,10 +36,15 @@ namespace rdk_gstreamer_utils
     bool isUIAudioVGAudioMixSupported_soc();
     unsigned int getNativeAudioFlag_soc();
     
+    void configAudioCap_soc(AudioAttributes *pAttrib, bool *audioaac, bool svpenabled, GstCaps **appsrcCaps);
     bool performAudioTrackCodecChannelSwitch_soc(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, const void *pSampleAttr, AudioAttributes *pAudioAttr, uint32_t *pStatus, unsigned int *pui32Delay,
                                                  llong *pAudioChangeTargetPts, const llong *pcurrentDispPts, unsigned int *audio_change_stage, GstCaps **appsrcCaps,
                                                  bool *audioaac, bool svpenabled, GstElement *aSrc, bool *ret);
     void setAppSrcParams_soc(GstElement *aSrc,MediaType mediatype);
     void setPixelAspectRatio_soc(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY);
     void deepElementAdded_soc (struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, GstBin* pipeline, GstBin* bin, GstElement* element);
+    void audioMixerGetDeviceInfo_soc(uint32_t& preferredFrames, uint32_t& maximumFrames);
+    size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms);
+    uint64_t audioMixerGetFifoSize_soc();
+    
 } //namespace rdk_gstreamer_utils
