@@ -66,16 +66,16 @@ namespace rdk_gstreamer_utils
     void processAudioGap_soc(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration,gint64 gapdiscontinuity,bool audioaac)
     {
         uint32_t ptsFadeDurationInMs;
-       
+
         if(true == audioaac) {
             ptsFadeDurationInMs = HEAAC_FRAME_SIZE;
         } else {
             ptsFadeDurationInMs = DDP_FRAME_SIZE;
         }
         GstElement *audioSink = NULL;
-        
+
         if(gapduration) {
-            
+
             g_object_get(pipeline, "audio-sink", &audioSink, NULL);
             if(audioSink) {
                 g_object_set(audioSink, "ms12ptsfade-level", 0, NULL);
@@ -84,7 +84,7 @@ namespace rdk_gstreamer_utils
             }
         }
         if(gapdiscontinuity) {
-            
+
             g_object_get(pipeline, "audio-sink", &audioSink, NULL);
             if(audioSink) {
             g_object_set(audioSink, "ms12ptsfade-level",1, NULL);
@@ -105,8 +105,8 @@ namespace rdk_gstreamer_utils
         GstElement *audioSink = NULL;
         LOG_RGU("configureUIAudioSink_soc: : connecting autoaudiosink");
         audioSink = gst_element_factory_make ("autoaudiosink","autoaudiosink");
-        
-        return audioSink;        
+
+        return audioSink;
     }
 
     bool isUIAudioVGAudioMixSupported_soc()
@@ -116,7 +116,7 @@ namespace rdk_gstreamer_utils
 
     unsigned getNativeAudioFlag_soc()
     {
-        return getGstPlayFlag("native-audio"); 
+        return getGstPlayFlag("native-audio");
     }
 
     bool isPtsOffsetAdjustmentSupported_soc()
@@ -167,17 +167,17 @@ namespace rdk_gstreamer_utils
                                                  bool *audioaac, bool svpenabled, GstElement *aSrc, bool *ret)
     {
         return false;
-    }       
+    }
 
     void setAppSrcParams_soc(GstElement *aSrc,MediaType mediatype)
     {
-        if (mediatype == MEDIA_VIDEO) 
+        if (mediatype == MEDIA_VIDEO)
             g_object_set(aSrc, "max-bytes", (guint64) 512 * 1024, NULL);
-        else 
+        else
             g_object_set(aSrc, "max-bytes", (guint64) 1 * 64 * 1024, NULL);
-    }    
+    }
 
-    void setPixelAspectRatio_soc(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY)                                 
+    void setPixelAspectRatio_soc(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY)
     {
         return;
     }
@@ -185,6 +185,26 @@ namespace rdk_gstreamer_utils
     void deepElementAdded_soc (struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup,GstBin* pipeline, GstBin* bin, GstElement* element)
     {
         return;
+    }
+
+    #define GST_FIFO_SIZE_MS (100)
+    void audioMixerGetDeviceInfo_soc(uint32_t& preferredFrames, uint32_t& maximumFrames)
+    {
+        uint64_t maxBytes = GST_FIFO_SIZE_MS * 48 * 4;  // 100ms of PCM data = 4800 frames * 4 bytes
+
+        maximumFrames = maxBytes / 4;
+        preferredFrames = maximumFrames / 4;
+        maximumFrames = (75 * 48);  // actually set to 75ms to pass NTS (everything else seems fine)
+    }
+
+    size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms)
+    {
+        return ((queuedBytes/256) * 64);
+    }
+
+    uint64_t audioMixerGetFifoSize_soc()
+    {
+        return (GST_FIFO_SIZE_MS * 48 * 4);
     }
 } // namespace rdk_gstreamer_utils_soc.cpp
 

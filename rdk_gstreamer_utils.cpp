@@ -128,12 +128,12 @@ namespace rdk_gstreamer_utils {
     {
         return getNativeAudioFlag_soc();
     }
-    
+
     bool isPtsOffsetAdjustmentSupported()
     {
         return isPtsOffsetAdjustmentSupported_soc();
     }
-    
+
     int getPtsOffsetAdjustment(const std::string& audioCodecString)
     {
         if (isPtsOffsetAdjustmentSupported_soc()) {
@@ -142,7 +142,7 @@ namespace rdk_gstreamer_utils {
             return 0;
         }
     }
-    
+
     void configAudioCap(AudioAttributes *pAttrib, bool *audioaac, bool svpenabled, GstCaps **appsrcCaps)
     {
         configAudioCap_soc(pAttrib,audioaac,svpenabled,appsrcCaps);
@@ -161,7 +161,7 @@ namespace rdk_gstreamer_utils {
     {
         return setAppSrcParams_soc(aSrc,mediatype);
     }
-    
+
     void setPixelAspectRatio(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY)
     {
         return setPixelAspectRatio_soc(ppCaps,appsrcCaps,pixelAspectRatioX,pixelAspectRatioY);
@@ -170,5 +170,20 @@ namespace rdk_gstreamer_utils {
     void deepElementAdded(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, GstBin* pipeline, GstBin* bin, GstElement* element)
     {
 	    deepElementAdded_soc(pgstUtilsPlaybackGroup,pipeline, bin,element);
+    }
+
+    void audioMixerGetDeviceInfo(uint32_t& preferredFrames, uint32_t& maximumFrames)
+    {
+        return  audioMixerGetDeviceInfo_soc(preferredFrames, maximumFrames);
+    }
+
+    size_t audioMixerGetBufferDelay(int64_t queuedBytes,int bufferDelayms)
+    {
+        return audioMixerGetBufferDelay_soc(queuedBytes,bufferDelayms);
+    }
+
+    uint64_t audioMixerGetFifoSize()
+    {
+        return audioMixerGetFifoSize_soc();
     }
 } // namespace rdk_gstreamer_utils

@@ -129,7 +129,7 @@ namespace rdk_gstreamer_utils
             LOG_RGU("setting seamless-audio switch on gstreamer");
             g_object_set(G_OBJECT (audioSink), "seamless-switch", true, NULL);
             g_object_unref(G_OBJECT (audioSink));
-        }   
+        }
     }
 
     GstElement * configureUIAudioSink_soc(bool TTSenabled)
@@ -146,9 +146,9 @@ namespace rdk_gstreamer_utils
             LOG_RGU("configureUIAudioSink_soc: : connecting fakesink");
             audioSink = gst_element_factory_make ("fakesink","autoaudiosink");
         }
-        return audioSink;        
+        return audioSink;
     }
-    
+
     bool isUIAudioVGAudioMixSupported_soc()
     {
         return false;
@@ -157,7 +157,7 @@ namespace rdk_gstreamer_utils
     unsigned getNativeAudioFlag_soc()
     {
         return 0; //Amlogic doesnt support HW decode
-        
+
     }
 
     bool isPtsOffsetAdjustmentSupported_soc()
@@ -222,7 +222,7 @@ namespace rdk_gstreamer_utils
         if (current_state == GST_STATE_PAUSED)
             LOG_RGU("OTF -> Current DecodeBin State = %d", current_state);
 
-        
+
     }
 
     static void firstTimeSwitchFromAC3toAAC(struct rdkGstreamerUtilsPlaybackGrp* pgstUtilsPlaybackGroup,GstCaps *newAudioCaps)
@@ -434,12 +434,12 @@ namespace rdk_gstreamer_utils
             LOG_RGU("OTF -> Removed AudioParser = %p", pgstUtilsPlaybackGroup->curAudioParse);
             pgstUtilsPlaybackGroup->curAudioParse=NULL;
         }
-        //TODO 
+        //TODO
         // Create new Audio Decoder and Parser. The inverse of the current
         if (pgstUtilsPlaybackGroup->isAudioAAC) {
             newAudioParse     = gst_element_factory_make ("ac3parse", "ac3parse");
             newAudioDecoder   = gst_element_factory_make ("identity", "fake_aud_ac3dec");
-        } 
+        }
         else {
             newAudioParse     = gst_element_factory_make ("aacparse", "aacparse");
             newAudioDecoder   = gst_element_factory_make ("avdec_aac", "avdec_aac");
@@ -637,27 +637,27 @@ namespace rdk_gstreamer_utils
         *ret = true;
         return true;
     }
-     
+
     void setAppSrcParams_soc(GstElement *aSrc,MediaType mediatype)
     {
         if (mediatype == MEDIA_VIDEO)
-        { 
+        {
             g_object_set(aSrc, "max-bytes", (guint64) 512 * 1024, NULL);
             g_object_set(aSrc, "max-buffers", (guint64) 250, NULL);
-        }    
-        else 
+        }
+        else
             g_object_set(aSrc, "max-bytes", (guint64) 1 * 64 * 1024, NULL);
         g_object_set(aSrc, "min-percent", (guint) 25, NULL);  //to signal that we need more data before we completely run dry
 
     }
 
-    void setPixelAspectRatio_soc(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY)                                 
+    void setPixelAspectRatio_soc(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY)
     {
         gchar* caps_string = gst_caps_to_string (appsrcCaps);
-    
+
         caps_string = g_strdup_printf("%s, pixel-aspect-ratio=(fraction)%d/%d", caps_string, pixelAspectRatioX, pixelAspectRatioY);
         *ppCaps = gst_caps_from_string(caps_string);
-    
+
         g_free(caps_string);
     }
 
@@ -669,28 +669,28 @@ namespace rdk_gstreamer_utils
         if (caps == NULL) {
             LOG_RGU("Typefind SRC Pad Caps NULL");
             return;
-        }    
+        }
 
         typefindCaps = gst_caps_to_string(caps);
         if (typefindCaps) {
-           
+
             if (g_strrstr(typefindCaps, "audio/")) {
-                
+
                 GstElement* typeFindParent = (GstElement *) gst_element_get_parent(typefind);
                 if (typeFindParent) {
-                    
+
                     gchar* elementName = gst_element_get_name(typeFindParent);
                     if (elementName && g_strrstr(elementName, "decodebin")) {
-                        pgstUtilsPlaybackGroup->curAudioDecodeBin=typeFindParent; 
-                        pgstUtilsPlaybackGroup->curAudioTypefind=typefind; 
+                        pgstUtilsPlaybackGroup->curAudioDecodeBin=typeFindParent;
+                        pgstUtilsPlaybackGroup->curAudioTypefind=typefind;
                         if (pgstUtilsPlaybackGroup->linkTypefindParser == true) {
                             if (gst_element_link(typefind, pgstUtilsPlaybackGroup->curAudioParse) == true) {
                                 pgstUtilsPlaybackGroup->linkTypefindParser = false;
-                            }    
+                            }
                         }
                     }
                     g_free(elementName);
-                    
+
                 }
             }
             g_free(typefindCaps);
@@ -711,10 +711,10 @@ namespace rdk_gstreamer_utils
             gchar* elementName = gst_element_get_name(element);
             if (elementName) {
                 if (g_strrstr(elementName, "parse")) {
-                    pgstUtilsPlaybackGroup->curAudioParse=element; 
+                    pgstUtilsPlaybackGroup->curAudioParse=element;
                 }
                 else if (g_strrstr(elementName, "dec")) {
-                    pgstUtilsPlaybackGroup->curAudioDecoder=element; 
+                    pgstUtilsPlaybackGroup->curAudioDecoder=element;
                 }
                 g_free(elementName);
             }
@@ -726,7 +726,7 @@ namespace rdk_gstreamer_utils
                 if (audioSinkParent) {
                     gchar* audiSinkParentName = gst_element_get_name(audioSinkParent);
                     if (audiSinkParentName && g_strrstr(audiSinkParentName, "bin")) {
-                        pgstUtilsPlaybackGroup->curAudioPlaysinkBin=audioSinkParent; 
+                        pgstUtilsPlaybackGroup->curAudioPlaysinkBin=audioSinkParent;
                     }
                     g_free(audiSinkParentName);
                 }
@@ -734,5 +734,30 @@ namespace rdk_gstreamer_utils
             }
         }
         }
+    }
+
+        /**
+    *  Time            Size            Frames
+    * ------------------------------------------
+    *  48ms           9216 bytes       2304 frames
+    */
+    #define GST_FIFO_SIZE_MS (48)
+    void audioMixerGetDeviceInfo_soc(uint32_t& preferredFrames, uint32_t& maximumFrames)
+    {
+        uint64_t maxBytes = GST_FIFO_SIZE_MS * 48 * 4;  // 48ms of PCM data = 2304 frames * 4 bytes
+
+        maximumFrames = maxBytes / 4;
+        preferredFrames = maximumFrames / 4;
+
+    }
+
+    size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms)
+    {
+        return ((queuedBytes/256) * 64 +  (bufferDelayms)*48);
+    }
+
+    uint64_t audioMixerGetFifoSize_soc()
+    {
+        return (GST_FIFO_SIZE_MS * 48 * 4);
     }
 } //namespace rdk_gstreamer_utils_soc.cpp

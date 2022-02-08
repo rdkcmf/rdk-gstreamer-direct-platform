@@ -80,8 +80,8 @@ namespace rdk_gstreamer_utils
         GstElement *audioSink = NULL;
         LOG_RGU("configureUIAudioSink_soc: : connecting alsasink");
         audioSink = gst_element_factory_make ("alsasink","alsasink");
-        
-        return audioSink;        
+
+        return audioSink;
     }
 
     bool isUIAudioVGAudioMixSupported_soc()
@@ -91,7 +91,7 @@ namespace rdk_gstreamer_utils
 
     unsigned  getNativeAudioFlag_soc()
     {
-        return getGstPlayFlag("native-audio"); 
+        return getGstPlayFlag("native-audio");
     }
 
     bool isPtsOffsetAdjustmentSupported_soc()
@@ -138,24 +138,50 @@ namespace rdk_gstreamer_utils
                                                  bool *audioaac, bool svpenabled, GstElement *aSrc, bool *ret)
     {
         return false;
-    } 
+    }
 
 
     void setAppSrcParams_soc(GstElement *aSrc,MediaType mediatype)
     {
-        if (mediatype == MEDIA_VIDEO) 
+        if (mediatype == MEDIA_VIDEO)
             g_object_set(aSrc, "max-bytes", (guint64) 512 * 1024, NULL);
-        else 
+        else
             g_object_set(aSrc, "max-bytes", (guint64) 1 * 64 * 1024, NULL);
-    } 
+    }
 
-    void setPixelAspectRatio_soc(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY)                                 
+    void setPixelAspectRatio_soc(GstCaps ** ppCaps,GstCaps *appsrcCaps,uint32_t pixelAspectRatioX,uint32_t pixelAspectRatioY)
     {
         return;
     }
-    
+
     void deepElementAdded_soc (struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup,GstBin* pipeline, GstBin* bin, GstElement* element)
     {
         return;
     }
+
+    /**
+    *  Time            Size            Frames
+    * ------------------------------------------
+    *  48ms           9216 bytes       2304 frames
+    */
+    #define GST_FIFO_SIZE_MS (48)
+    void audioMixerGetDeviceInfo_soc(uint32_t& preferredFrames, uint32_t& maximumFrames)
+    {
+        uint64_t maxBytes = GST_FIFO_SIZE_MS * 48 * 4;  // 48ms of PCM data = 2304 frames * 4 bytes
+
+        maximumFrames = maxBytes / 4;
+        preferredFrames = maximumFrames / 4;
+
+    }
+
+    size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms)
+    {
+        return ((queuedBytes/256) * 64 +  (bufferDelayms)*48);
+    }
+
+    uint64_t audioMixerGetFifoSize_soc()
+    {
+        return (GST_FIFO_SIZE_MS * 48 * 4);
+    }
+
 } // namespace rdk_gstreamer_utils
