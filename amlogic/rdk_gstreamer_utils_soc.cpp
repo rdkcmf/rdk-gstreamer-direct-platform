@@ -66,6 +66,25 @@ namespace rdk_gstreamer_utils
         return true;
     }
 
+    void SetAudioServerParam_soc(bool enabled)
+    {
+        char setting[50];
+
+        struct audio_hw_device *dev_;
+        audio_hw_load_interface(&dev_);
+        if (dev_)
+        {
+            LOG_RGU("update audioserver netflix enable");
+            snprintf(setting, sizeof(setting), "is_netflix=%d", enabled);
+            dev_->set_parameters(dev_, setting);
+            audio_hw_unload_interface(dev_);
+        }
+        else
+        {
+            LOG_RGU("Failed to update audioserver netflix enable status");
+        }
+    }
+
     void EaseAudio_soc(double target, uint32_t duration, rgu_Ease ease)
     {
         int32_t gain = static_cast<int>(20.0f * log10(target) * 128.0f);

@@ -200,4 +200,9 @@ namespace rdk_gstreamer_utils
         // no op. To be implemented if required later
         return;
     }
+
+    void SetAudioServerParam_soc(bool enabled)
+    {
+        return;
+    }
 } // namespace rdk_gstreamer_utils

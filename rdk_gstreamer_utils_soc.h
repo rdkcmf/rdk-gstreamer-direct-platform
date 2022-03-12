@@ -48,4 +48,5 @@ namespace rdk_gstreamer_utils
     void switchToAudioMasterMode_soc();
     void setKeyFrameFlag_soc(GstBuffer *gstBuffer,bool val);
     bool getDelayTimerEnabled_soc();
+    void SetAudioServerParam_soc(bool enabled);
 } //namespace rdk_gstreamer_utils

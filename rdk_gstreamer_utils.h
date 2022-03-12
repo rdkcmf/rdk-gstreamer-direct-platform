@@ -153,5 +153,6 @@ namespace rdk_gstreamer_utils {
 
     void setKeyFrameFlag(GstBuffer *gstBuffer,bool val);
     bool getDelayTimerEnabled();
+    void SetAudioServerParam(bool enabled);
 } // namespace rdk_gstreamer_utils
 #endif /* __RDK_GSTREAMER_UTILS_H___ */

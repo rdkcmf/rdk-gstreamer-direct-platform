@@ -232,6 +232,10 @@ namespace rdk_gstreamer_utils
 	return true;
     }
 
+    void SetAudioServerParam_soc(bool enabled)
+    {
+        return;
+    }
 
 } // namespace rdk_gstreamer_utils_soc.cpp
 

@@ -202,5 +202,8 @@ namespace rdk_gstreamer_utils {
         return getDelayTimerEnabled_soc();
     }
 
-
+    void SetAudioServerParam(bool enabled)
+    {
+       SetAudioServerParam_soc(enabled);
+    }
 } // namespace rdk_gstreamer_utils
