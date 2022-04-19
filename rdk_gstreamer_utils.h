@@ -127,6 +127,7 @@ namespace rdk_gstreamer_utils {
 
     void initVirtualDisplayHeightandWidthFromPlatform(unsigned int* mVirtualDisplayHeight, unsigned int* mVirtualDisplayWidth);
 
+    bool IntialVolSettingNeeded();
     bool isSocAudioFadeSupported();
     void doAudioEasingonSoc(double target, uint32_t duration, rgu_Ease ease);
 
@@ -149,6 +150,7 @@ namespace rdk_gstreamer_utils {
     void audioMixerGetDeviceInfo(uint32_t& preferredFrames, uint32_t& maximumFrames);
     size_t audioMixerGetBufferDelay(int64_t queuedBytes,int bufferDelayms);
     uint64_t audioMixerGetFifoSize();
+    void configVideoCap(std::string vCodec,uint32_t imageWidth,uint32_t imageHeight,uint32_t frameRateValue,uint32_t frameRateScale,bool svpEnabled,gchar **capsString);
     void switchToAudioMasterMode();
 
     void setKeyFrameFlag(GstBuffer *gstBuffer,bool val);

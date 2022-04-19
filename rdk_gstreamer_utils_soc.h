@@ -25,6 +25,7 @@ namespace rdk_gstreamer_utils
     const char* getAudioDecoderName_soc();
     const char* getAudioUnderflowSignalName_soc();
     const char* getVideoUnderflowSignalName_soc();
+    bool IntialVolSettingNeeded_soc();
     bool IsAudioFadeSupported_soc();
     void EaseAudio_soc(double target, uint32_t duration, rgu_Ease ease);
     bool isPtsOffsetAdjustmentSupported_soc();
@@ -45,6 +46,8 @@ namespace rdk_gstreamer_utils
     void audioMixerGetDeviceInfo_soc(uint32_t& preferredFrames, uint32_t& maximumFrames);
     size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms);
     uint64_t audioMixerGetFifoSize_soc();
+    void setVideoSinkMode_soc(GstElement * videoSink);
+    void configVideoCap_soc(std::string vCodec,uint32_t imageWidth,uint32_t imageHeight,uint32_t frameRateValue,uint32_t frameRateScale,bool svpEnabled,gchar **capsString);
     void switchToAudioMasterMode_soc();
     void setKeyFrameFlag_soc(GstBuffer *gstBuffer,bool val);
     bool getDelayTimerEnabled_soc();

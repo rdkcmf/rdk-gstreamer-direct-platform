@@ -88,6 +88,11 @@ namespace rdk_gstreamer_utils {
 	return id_audio > 0 && id_video > 0;
     }
 
+    bool IntialVolSettingNeeded()
+    {
+        return IntialVolSettingNeeded_soc();
+    }
+
     bool isSocAudioFadeSupported()
     {
         return IsAudioFadeSupported_soc();
@@ -185,6 +190,16 @@ namespace rdk_gstreamer_utils {
     uint64_t audioMixerGetFifoSize()
     {
         return audioMixerGetFifoSize_soc();
+    }
+
+    void setVideoSinkMode(GstElement * videoSink)
+    {
+        return setVideoSinkMode_soc(videoSink);
+    }
+
+    void configVideoCap(std::string vCodec,uint32_t imageWidth,uint32_t imageHeight,uint32_t frameRateValue,uint32_t frameRateScale,bool svpEnabled,gchar **capsString)
+    {
+        return configVideoCap_soc(vCodec,imageWidth,imageHeight,frameRateValue,frameRateScale,svpEnabled,capsString);
     }
 
     void switchToAudioMasterMode()

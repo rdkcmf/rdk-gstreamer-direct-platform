@@ -50,6 +50,11 @@ namespace rdk_gstreamer_utils
         *mVirtualDisplayWidth = PLATFORM_VIRTUALDISPLAY_WIDTH;
     }
 
+    bool IntialVolSettingNeeded_soc()
+    {
+        return true;
+    }
+
     bool IsAudioFadeSupported_soc()
     {
         return false;
@@ -208,6 +213,44 @@ namespace rdk_gstreamer_utils
     uint64_t audioMixerGetFifoSize_soc()
     {
         return (GST_FIFO_SIZE_MS * 48 * 4);
+    }
+
+    void setVideoSinkMode_soc(GstElement * videoSink)
+    {
+         g_object_set(G_OBJECT(videoSink), "zoom-mode",0, NULL);
+    }
+
+    static bool IsH265Stream(std::string codec)
+    {
+        bool retVal = false;
+
+        if( codec.find(std::string("h265"))  != std::string::npos ||
+            codec.find(std::string("hdr10")) != std::string::npos ||
+            codec.find(std::string("dvhe"))  != std::string::npos ||
+            codec.find(std::string("dvh1"))  != std::string::npos ||
+            codec.find(std::string("hvc1"))  != std::string::npos ||
+            codec.find(std::string("hev1"))  != std::string::npos ) {
+            LOG_RGU("IsH265Stream found H265 stream, requested codec is %s", codec.c_str());
+            retVal = true;
+        }
+
+        return retVal;
+    }
+
+    void configVideoCap_soc(std::string vCodec,uint32_t imageWidth,uint32_t imageHeight,uint32_t frameRateValue,uint32_t frameRateScale,bool svpEnabled,gchar **capsString)
+    {
+        if (IsH265Stream(vCodec))
+        {
+            LOG_RGU("####### Using HEVC codec\n");
+            *capsString = g_strdup_printf("video/x-h265, alignment=(string)au, stream-format=(string)byte-stream, width=(int)%u, height=(int)%u, framerate=(fraction)%u/%u, enable-svp=(string)%s",
+                                imageWidth,imageHeight,frameRateValue,frameRateScale,svpEnabled ? "true" : "false");
+        }
+        else
+        {
+            LOG_RGU("####### Using H264 codec\n");
+            *capsString = g_strdup_printf("video/x-h264, alignment=(string)au, stream-format=(string)byte-stream, width=(int)%u, height=(int)%u, framerate=(fraction)%u/%u, enable-svp=(string)%s",
+                                imageWidth,imageHeight,frameRateValue,frameRateScale,svpEnabled ? "true" : "false");
+        }
     }
 
     void switchToAudioMasterMode_soc()
