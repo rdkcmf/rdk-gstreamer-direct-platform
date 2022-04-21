@@ -134,7 +134,7 @@ namespace rdk_gstreamer_utils
     {
         if (gapduration >= MIN_AUDIO_GAP_SUPPORTED) {
             GstElement *audioSink = NULL;
-            g_object_get(pipeline, "amlhalasink", &audioSink, NULL);
+            g_object_get(pipeline, "audio-sink", &audioSink, NULL);
             if (audioSink){
                 //LOG_RGU( "gap-start-pts/duration: %" PRId64 "/%d, pts_offset=%lld",gapstartpts, gapduration);
                 g_object_set(audioSink, "gap-start-pts", gapstartpts, NULL);
