@@ -158,7 +158,25 @@ namespace rdk_gstreamer_utils
         {
             LOG_RGU("configureUIAudioSink_soc: connecting amlhalasink");
             audioSink = gst_element_factory_make ("amlhalasink", "AudioMixer-Sink");
-            g_object_set(G_OBJECT(audioSink), "direct-mode", FALSE, NULL);
+            if (audioSink)
+            {
+              g_object_set(G_OBJECT(audioSink), "direct-mode", FALSE, NULL);
+              
+            }
+            else
+            {
+              audioSink = gst_element_factory_make ("fakesink","autoaudiosink");
+              if (audioSink)
+              {
+                LOG_RGU("\nconfigureUIAudioSink_soc: : connected fakesink");
+              }
+              else
+              {
+                LOG_RGU("\nconfigureUIAudioSink_soc: : connecting fakesink failed");
+              }
+            }
+
+
         }
         else
         {
