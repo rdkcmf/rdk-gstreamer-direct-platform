@@ -151,6 +151,8 @@ namespace rdk_gstreamer_utils {
     size_t audioMixerGetBufferDelay(int64_t queuedBytes,int bufferDelayms);
     uint64_t audioMixerGetFifoSize();
     void configVideoCap(std::string vCodec,uint32_t imageWidth,uint32_t imageHeight,uint32_t frameRateValue,uint32_t frameRateScale,bool svpEnabled,gchar **capsString);
+    void audioMixerConfigurePipeline(GstElement *gstPipeline,GstElement *aSink,GstElement *aSrc,bool attenuateOutput);
+    uint64_t audioMixerGetQueuedBytes(uint64_t bytesPushed,uint64_t bytesPlayed);
     void switchToAudioMasterMode();
     void setVideoSinkMode(GstElement * videoSink);
     void setKeyFrameFlag(GstBuffer *gstBuffer,bool val);

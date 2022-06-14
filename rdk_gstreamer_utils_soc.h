@@ -46,6 +46,8 @@ namespace rdk_gstreamer_utils
     void audioMixerGetDeviceInfo_soc(uint32_t& preferredFrames, uint32_t& maximumFrames);
     size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms);
     uint64_t audioMixerGetFifoSize_soc();
+    void audioMixerConfigurePipeline_soc(GstElement *gstPipeline,GstElement *aSink,GstElement *aSrc,bool attenuateOutput);
+    uint64_t audioMixerGetQueuedBytes_soc(uint64_t bytesPushed,uint64_t bytesPlayed);
     void setVideoSinkMode_soc(GstElement * videoSink);
     void configVideoCap_soc(std::string vCodec,uint32_t imageWidth,uint32_t imageHeight,uint32_t frameRateValue,uint32_t frameRateScale,bool svpEnabled,gchar **capsString);
     void switchToAudioMasterMode_soc();

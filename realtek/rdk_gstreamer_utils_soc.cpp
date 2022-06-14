@@ -21,6 +21,9 @@
 #include "../rdk_gstreamer_utils.h"
 namespace rdk_gstreamer_utils
 {
+    #define GST_AV_SYNC_OFFSET    (65)
+    #define GST_PRELOAD_TIME       (30)
+
     enum rgu_audio_change_state {
         AUDCHG_INIT = 0,
         AUDCHG_CMD = 1,
@@ -102,8 +105,7 @@ namespace rdk_gstreamer_utils
     GstElement * configureUIAudioSink_soc(bool TTSenabled)
     {
         GstElement *audioSink = NULL;
-        LOG_RGU("configureUIAudioSink_soc: : connecting alsasink");
-        audioSink = gst_element_factory_make ("alsasink","alsasink");
+        LOG_RGU("configureUIAudioSink_soc: : connecting rtkaudiosink");
         audioSink = gst_element_factory_make ("rtkaudiosink","rtkaudiosink");
         g_object_set(G_OBJECT(audioSink), "media-tunnel",  FALSE, NULL);
         g_object_set(G_OBJECT(audioSink), "audio-service",  TRUE, NULL);
@@ -762,19 +764,49 @@ namespace rdk_gstreamer_utils
     * ------------------------------------------
     *  48ms           9216 bytes       2304 frames
     */
-    #define GST_FIFO_SIZE_MS (48)
+    #define GST_FIFO_SIZE_MS (131)
     void audioMixerGetDeviceInfo_soc(uint32_t& preferredFrames, uint32_t& maximumFrames)
     {
-        uint64_t maxBytes = GST_FIFO_SIZE_MS * 48 * 4;  // 48ms of PCM data = 2304 frames * 4 bytes
-
-        maximumFrames = maxBytes / 4;
+        maximumFrames = GST_FIFO_SIZE_MS * 48;
         preferredFrames = maximumFrames / 4;
 
     }
 
     size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms)
     {
-        return ((queuedBytes/256) * 64 +  (bufferDelayms)*48);
+        return ((queuedBytes/256) * 64 +  (bufferDelayms * 48));
+    }
+
+    uint64_t audioMixerGetQueuedBytes_soc(uint64_t bytesPushed,uint64_t bytesPlayed)
+    {
+        return (bytesPushed-bytesPlayed-(GST_PRELOAD_TIME * 48 * 4));
+    }
+
+    void audioMixerConfigurePipeline_soc(GstElement *gstPipeline,GstElement *aSink,GstElement *aSrc,bool attenuateOutput)
+    {
+        const float AUDIO_VOLUME_SCALE_FACTOR=0.8;
+        g_object_set(G_OBJECT(aSink), "volume", 1.0 * AUDIO_VOLUME_SCALE_FACTOR, NULL);
+        g_object_set(G_OBJECT(aSink), "buffer-time",  ((100 * GST_MSECOND) / GST_USECOND), NULL);
+
+        GstElement *convert = NULL;
+        GstElement *resample = NULL;
+        GstElement *volume = NULL;
+
+        convert = gst_element_factory_make("audioconvert", NULL);
+        resample = gst_element_factory_make("audioresample", NULL);
+        volume = gst_element_factory_make("volume", NULL);
+
+        gst_bin_add_many(GST_BIN(gstPipeline), aSrc, volume, convert, resample, aSink,  NULL);
+        gst_element_link_many (aSrc, volume, convert, resample, aSink, NULL);
+        if(attenuateOutput)
+        {
+           LOG_RGU("GstAudioMixerOutput: No Audio Equivalence, so attenuating mixer output");
+           g_object_set(G_OBJECT(aSink), "volume", 1.0 * AUDIO_VOLUME_SCALE_FACTOR, NULL);
+        }
+        else
+        {
+           LOG_RGU("GstAudioMixerOutput: Audio Equivalence On, not attenuating mixer output");
+        }
     }
 
     uint64_t audioMixerGetFifoSize_soc()

@@ -202,6 +202,16 @@ namespace rdk_gstreamer_utils {
         return configVideoCap_soc(vCodec,imageWidth,imageHeight,frameRateValue,frameRateScale,svpEnabled,capsString);
     }
 
+    uint64_t audioMixerGetQueuedBytes(uint64_t bytesPushed,uint64_t bytesPlayed)
+    {
+        return audioMixerGetQueuedBytes_soc(bytesPushed,bytesPlayed);
+    }
+
+    void audioMixerConfigurePipeline(GstElement *gstPipeline,GstElement *aSink,GstElement *aSrc,bool attenuateOutput)
+    {
+        return audioMixerConfigurePipeline_soc(gstPipeline,aSink,aSrc,attenuateOutput);
+    }
+
     void switchToAudioMasterMode()
     {
         return switchToAudioMasterMode_soc();

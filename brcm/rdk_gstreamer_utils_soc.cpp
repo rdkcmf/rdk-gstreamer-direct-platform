@@ -253,6 +253,29 @@ namespace rdk_gstreamer_utils
         }
     }
 
+
+    uint64_t audioMixerGetQueuedBytes_soc(uint64_t bytesPushed,uint64_t bytesPlayed)
+    {
+        return (bytesPushed-bytesPlayed);
+    }
+
+    void audioMixerConfigurePipeline_soc(GstElement *gstPipeline,GstElement *aSink,GstElement *aSrc,bool attenuateOutput)
+    {
+        const float AUDIO_VOLUME_SCALE_FACTOR=1.0;
+        g_object_set(G_OBJECT(aSink), "volume", 1.0 * AUDIO_VOLUME_SCALE_FACTOR, NULL);
+        gst_bin_add_many (GST_BIN (gstPipeline), aSrc, aSink, NULL);
+        gst_element_link_many (aSrc, aSink, NULL);
+        if(attenuateOutput)
+        {
+           LOG_RGU("GstAudioMixerOutput: No Audio Equivalence, so attenuating mixer output");
+           g_object_set(G_OBJECT(aSink), "volume", 0.5 * AUDIO_VOLUME_SCALE_FACTOR, NULL);
+        }
+        else
+        {
+           LOG_RGU("GstAudioMixerOutput: Audio Equivalence On, not attenuating mixer output");
+        }
+    }
+
     void switchToAudioMasterMode_soc()
     {
         putenv("GST_BRCM_STC_MODE=audio");
