@@ -152,7 +152,7 @@ namespace rdk_gstreamer_utils {
     uint64_t audioMixerGetFifoSize();
     void configVideoCap(std::string vCodec,uint32_t imageWidth,uint32_t imageHeight,uint32_t frameRateValue,uint32_t frameRateScale,bool svpEnabled,gchar **capsString);
     void switchToAudioMasterMode();
-
+    void setVideoSinkMode(GstElement * videoSink);
     void setKeyFrameFlag(GstBuffer *gstBuffer,bool val);
     bool getDelayTimerEnabled();
     void SetAudioServerParam(bool enabled);
