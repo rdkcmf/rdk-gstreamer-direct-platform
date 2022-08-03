@@ -785,6 +785,7 @@ namespace rdk_gstreamer_utils
         const float AUDIO_VOLUME_SCALE_FACTOR=0.8;
         g_object_set(G_OBJECT(aSink), "volume", 1.0 * AUDIO_VOLUME_SCALE_FACTOR, NULL);
         g_object_set(G_OBJECT(aSink), "buffer-time",  ((100 * GST_MSECOND) / GST_USECOND), NULL);
+        g_object_set(G_OBJECT(aSrc), "format", GST_FORMAT_TIME, NULL);
 
         GstElement *convert = NULL;
         GstElement *resample = NULL;
