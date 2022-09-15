@@ -740,8 +740,6 @@ namespace rdk_gstreamer_utils
                LOG_RGU( "dElementAdded - Element Name = %s", elementName);
                 if (elementName && g_strrstr(elementName, "audiosink")) {
                     mCurAudioSink = element;
-                    /*Set audiosink into async false state to speedup the start of playback.*/
-                    g_object_set(mCurAudioSink, "async", false, NULL);
                     GstElement* audioSinkParent = (GstElement *) gst_element_get_parent(element);
                     if (audioSinkParent) {
                         gchar* audioSinkParentName = gst_element_get_name(audioSinkParent);
