@@ -115,7 +115,11 @@ namespace rdk_gstreamer_utils
 
     bool isUIAudioVGAudioMixSupported_soc()
     {
+        #if defined(AUDIOMIXER_NOT_SUPPORTED)
+        return false;
+        #else
         return true;
+        #endif
     }
 
     unsigned  getNativeAudioFlag_soc()
