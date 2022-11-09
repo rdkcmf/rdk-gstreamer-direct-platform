@@ -18,6 +18,7 @@
 */
 
 #include <stdlib.h>
+#include <gst/app/gstappsrc.h>
 
 #include "../rdk_gstreamer_utils.h"
 #define GST_BUFFER_FLAG_NF_KEYFRAME (GST_BUFFER_FLAG_LAST << 1)
@@ -25,6 +26,21 @@ namespace rdk_gstreamer_utils
 {
     #define HEAAC_FRAME_SIZE 42
     #define DDP_FRAME_SIZE 32
+    const uint32_t      MIN_AUDIO_GAP_SUPPORTED = 35;
+    static const int    sAudioChangeGapThresholdMS = 40;
+    const uint32_t      WAIT_WHILE_IDLING_MS = 100;
+    const uint32_t      OK = 0;
+    enum audio_change_state
+    {
+        AUDCHG_INIT = 0,
+        AUDCHG_CMD = 1,
+        AUDCHG_SET = 2,
+        AUDCHG_ALIGN = 3,
+    };
+  
+    #define HEAAC_PTS_OFFSET_MS (2*HEAAC_FRAME_SIZE*45)
+    GstElement * mCurAudioDecoder = NULL;
+    gboolean mCurIsAudioAAC = false;
 
     const char* getAudioDecoderName_soc()
     {
@@ -74,11 +90,13 @@ namespace rdk_gstreamer_utils
     void processAudioGap_soc(GstElement *pipeline,gint64 gapstartpts,gint32 gapduration,gint64 gapdiscontinuity,bool audioaac)
     {
         uint32_t ptsFadeDurationInMs;
+        gint64 fadeInOffset = 0;
 
         if(true == audioaac) {
             ptsFadeDurationInMs = HEAAC_FRAME_SIZE;
         } else {
             ptsFadeDurationInMs = DDP_FRAME_SIZE;
+            fadeInOffset = DDP_FRAME_SIZE;
         }
         GstElement *audioSink = NULL;
 
@@ -86,8 +104,8 @@ namespace rdk_gstreamer_utils
 
             g_object_get(pipeline, "audio-sink", &audioSink, NULL);
             if(audioSink) {
-                g_object_set(audioSink, "ms12ptsfade-level", 0, NULL);
-                g_object_set(audioSink, "ms12ptsfade-duration", ptsFadeDurationInMs, NULL);
+                g_object_set(audioSink, "ms12ptsfade-level", (guint32) 0, NULL);
+                g_object_set(audioSink, "ms12ptsfade-duration", (guint32) ptsFadeDurationInMs, NULL);
                 g_object_set(audioSink, "ms12ptsfade-pts", gapstartpts, NULL);
             }
         }
@@ -95,9 +113,9 @@ namespace rdk_gstreamer_utils
 
             g_object_get(pipeline, "audio-sink", &audioSink, NULL);
             if(audioSink) {
-            g_object_set(audioSink, "ms12ptsfade-level",1, NULL);
-            g_object_set(audioSink, "ms12ptsfade-duration", ptsFadeDurationInMs, NULL);
-            g_object_set(audioSink, "ms12ptsfade-pts", gapstartpts, NULL);
+            	g_object_set(audioSink, "ms12ptsfade-level", (guint32) 1, NULL);
+                g_object_set(audioSink, "ms12ptsfade-duration", (guint32) ptsFadeDurationInMs, NULL);
+                g_object_set(audioSink, "ms12ptsfade-pts", (gint64) (gapstartpts + fadeInOffset), NULL);
             }
         }
     }
@@ -124,6 +142,9 @@ namespace rdk_gstreamer_utils
 
     unsigned getNativeAudioFlag_soc()
     {
+        /* this is called during _init, so reset locals here */
+        mCurAudioDecoder = NULL;
+        mCurIsAudioAAC = false;
         return getGstPlayFlag("native-audio");
     }
 
@@ -131,14 +152,28 @@ namespace rdk_gstreamer_utils
     {
         return true;
     }
+  
+    void updateAudioPtsOffset(void)
+    {
+        if (mCurAudioDecoder)
+        {
+            g_object_set(mCurAudioDecoder, "audio pts offset", (mCurIsAudioAAC ? 0 : HEAAC_PTS_OFFSET_MS), NULL);
+        }
+    }
+
+    /* save the current audio format, update PTS offset in the audio decoder */
+    void updateAudioPtsOffset(const std::string& audioCodecString)
+    {
+        mCurIsAudioAAC = (audioCodecString.compare(0, 4, std::string("mp4a")) == 0);
+        updateAudioPtsOffset();
+    }
+
+    /* always return AAC offset to the video, so that it will add that PTS offset as a base, move the audio back and forth */
 
     int getPtsOffsetAdjustment_soc(const std::string& audioCodecString)
     {
-        unsigned int HEAAC_FRAME_SIZE_IN_MS = 42;
-        bool isAudioAAC = (audioCodecString.compare(std::string("mp4a"))==0);
-        int ptsoffset = (isAudioAAC) ? (2*HEAAC_FRAME_SIZE_IN_MS*45) : 0;
-
-        return ptsoffset;
+        updateAudioPtsOffset(audioCodecString);
+        return HEAAC_PTS_OFFSET_MS;
     }
 
     void configAudioCap_soc(AudioAttributes *pAttrib, bool *audioaac, bool svpenabled, GstCaps **appsrcCaps)
@@ -170,11 +205,100 @@ namespace rdk_gstreamer_utils
         g_free(caps_string);
     }
 
+    bool audioCodecSwitch(
+        const void              *pSampleAttr,
+        AudioAttributes         *pAudioAttr,
+        uint32_t                *pStatus,
+        unsigned int            *pui32Delay,
+        llong                   *pAudioChangeTargetPts,
+        const llong             *pcurrentDispPts,
+        unsigned int            *audio_change_stage,
+        GstCaps                 **appsrcCaps,
+        bool                    *audioaac,
+        bool                    svpenabled,
+        GstElement              *aSrc,
+        GstElement              *pipeline
+    )
+    {
+        struct timespec ts, now;
+        unsigned int reconfig_delay_ms;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        if (*pStatus != OK || pSampleAttr == nullptr) {
+            LOG_RGU("No audio data ready yet");
+            *pui32Delay = WAIT_WHILE_IDLING_MS;
+            return false;
+        }
+
+        if (pAudioAttr) {
+            const char  *pCodecStr = pAudioAttr->mCodecParam.c_str();
+            const char  *pCodecAcc = strstr(pCodecStr, "mp4a");
+            bool        isAudioAAC = (pCodecAcc) ? true : false ;
+            bool        isCodecSwitch = false;
+
+            LOG_RGU("Audio Attribute format %s  channel %d samp %d, bitrate %d blockAligment %d",
+                    pCodecStr, pAudioAttr->mNumberOfChannels,
+                    pAudioAttr->mSamplesPerSecond, pAudioAttr->mBitrate,
+                    pAudioAttr->mBlockAlignment);
+
+            *pAudioChangeTargetPts = *pcurrentDispPts;
+            *audio_change_stage = AUDCHG_ALIGN;
+            LOG_RGU("isAudioAAC = %d, *audioaac = %d", isAudioAAC, *audioaac);
+            if (*appsrcCaps) {
+                gst_caps_unref(*appsrcCaps);
+                *appsrcCaps = NULL;
+            }
+
+            if (isAudioAAC != *audioaac)
+                isCodecSwitch = true;
+
+            configAudioCap_soc(pAudioAttr, audioaac, svpenabled, appsrcCaps);
+            {
+                gboolean  ret = FALSE;
+                GstEvent* flush_start = NULL;
+                GstEvent* flush_stop  = NULL;
+
+                flush_start = gst_event_new_flush_start();
+                ret = gst_element_send_event(aSrc, flush_start);
+                if (!ret)
+                    LOG_RGU("ERROR: failed to send flush-start event");
+
+                flush_stop = gst_event_new_flush_stop(TRUE);
+                ret = gst_element_send_event(aSrc, flush_stop);
+                if (!ret)
+                    LOG_RGU("ERROR: failed to send flush-stop event");
+            }
+
+            gst_app_src_set_caps(GST_APP_SRC(aSrc), *appsrcCaps);
+
+            if (isCodecSwitch) {
+                if ((isPtsOffsetAdjustmentSupported_soc()) && (pAudioAttr != NULL)) {
+                    updateAudioPtsOffset(pAudioAttr->mCodecParam);
+                }
+            }
+
+            clock_gettime(CLOCK_MONOTONIC, &now);
+            reconfig_delay_ms = now.tv_nsec > ts.tv_nsec ?
+                        (now.tv_nsec-ts.tv_nsec)/1000000 :
+                        (1000 - (ts.tv_nsec -now.tv_nsec)/1000000);
+
+            *pAudioChangeTargetPts += (reconfig_delay_ms + sAudioChangeGapThresholdMS);
+        }
+        else {
+            *pui32Delay = 0;
+            return false;
+        }
+
+        return true;
+    }
+
     bool performAudioTrackCodecChannelSwitch_soc(struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup, const void *pSampleAttr, AudioAttributes *pAudioAttr, uint32_t *pStatus, unsigned int *pui32Delay,
                                                  llong *pAudioChangeTargetPts, const llong *pcurrentDispPts, unsigned int *audio_change_stage, GstCaps **appsrcCaps,
                                                  bool *audioaac, bool svpenabled, GstElement *aSrc, bool *ret)
     {
-        return false;
+        bool retVal = audioCodecSwitch(pSampleAttr, pAudioAttr, pStatus, pui32Delay, pAudioChangeTargetPts, pcurrentDispPts, audio_change_stage,
+        appsrcCaps, audioaac, svpenabled, aSrc, pgstUtilsPlaybackGroup->gstPipeline);
+        *ret = retVal;
+        return true;
     }
 
     void setAppSrcParams_soc(GstElement *aSrc,MediaType mediatype)
@@ -192,7 +316,14 @@ namespace rdk_gstreamer_utils
 
     void deepElementAdded_soc (struct rdkGstreamerUtilsPlaybackGrp *pgstUtilsPlaybackGroup,GstBin* pipeline, GstBin* bin, GstElement* element)
     {
-        return;
+        gchar* elementName = gst_element_get_name(element);
+        if (elementName && isPtsOffsetAdjustmentSupported_soc()) {
+            if (g_strrstr(elementName, "brcmaudiodecoder")) {
+                mCurAudioDecoder = element;
+                updateAudioPtsOffset();
+            }
+            g_free(elementName);
+        }
     }
 
     #define GST_FIFO_SIZE_MS (100)
@@ -207,7 +338,7 @@ namespace rdk_gstreamer_utils
 
     size_t audioMixerGetBufferDelay_soc(int64_t queuedBytes,int bufferDelayms)
     {
-        return ((queuedBytes/256) * 64);
+        return (((queuedBytes/256) * 64)  +  (bufferDelayms * 48));
     }
 
     uint64_t audioMixerGetFifoSize_soc()
@@ -217,7 +348,7 @@ namespace rdk_gstreamer_utils
 
     void setVideoSinkMode_soc(GstElement * videoSink)
     {
-         g_object_set(G_OBJECT(videoSink), "zoom-mode",0, NULL);
+         return; //no op
     }
 
     static bool IsH265Stream(std::string codec)
@@ -280,7 +411,7 @@ namespace rdk_gstreamer_utils
     {
         putenv("GST_BRCM_STC_MODE=audio");
     }
-    
+
     void setKeyFrameFlag_soc(GstBuffer *gstBuffer,bool val)
     {
 	if( val) {
@@ -292,10 +423,7 @@ namespace rdk_gstreamer_utils
 
     bool getDelayTimerEnabled_soc()
     {
-        //return false;
-	/*Actual retval is false for brcm platform (BCOM-5932(Xi6)), but changes not yet working for Kaon,
-	Hence for now let the API return true itself.*/
-	return true;
+        return false;
     }
 
     void SetAudioServerParam_soc(bool enabled)
